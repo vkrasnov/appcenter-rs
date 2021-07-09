@@ -1,4 +1,18 @@
+use sysinfo::{System, SystemExt};
+
 pub(crate) struct Utils {}
+
+impl Utils {
+    /// Retrieve the current process PID
+    pub(crate) fn get_pid() -> u32 {
+        std::process::id()
+    }
+
+    pub(crate) fn get_os_version() -> String {
+        System::new().long_os_version().unwrap_or_else(|| "Unknown".to_string())
+    }
+}
+
 
 #[cfg(windows)]
 impl Utils {
@@ -19,32 +33,6 @@ impl Utils {
         };
 
         locale.into_string().unwrap_or("en_US".to_string())
-    }
-
-    /// Retrieve the current process PID
-    pub(crate) fn get_pid() -> u32 {
-        unsafe { winapi::um::processthreadsapi::GetCurrentProcessId() }
-    }
-
-    pub(crate) fn get_os_version() -> String {
-        #[link(name = "Ntdll")]
-        extern "system" {
-            fn RtlGetNtVersionNumbers(
-                MajorVersion: &mut u32,
-                MinorVersion: &mut u32,
-                BuildNumber: &mut u32,
-            );
-        }
-
-        let mut major = 0;
-        let mut minor = 0;
-        let mut build = 0;
-
-        unsafe {
-            RtlGetNtVersionNumbers(&mut major, &mut minor, &mut build);
-        }
-
-        format!("{}.{}.{}", major, minor, build & 0x0fffffff)
     }
 
     pub fn get_model() -> String {
@@ -79,15 +67,6 @@ impl Utils {
         "en_US".to_string()
     }
 
-    /// Retrieve the current process PID
-    pub(crate) fn get_pid() -> u32 {
-        unsafe { libc::getpid() as _ }
-    }
-
-    pub(crate) fn get_os_version() -> String {
-        "Linux".to_string()
-    }
-
     pub fn get_model() -> String {
         "Computer".to_string()
     }
@@ -97,51 +76,6 @@ impl Utils {
 impl Utils {
     pub(crate) fn get_locale() -> String {
         "en_US".to_string()
-    }
-
-    /// Retrieve the current process PID
-    pub(crate) fn get_pid() -> u32 {
-        unsafe { libc::getpid() as _ }
-    }
-
-    pub(crate) fn get_os_version() -> String {
-        use core_foundation::base::{CFTypeRef, TCFType};
-        use core_foundation::dictionary::{CFDictionary, CFDictionaryRef};
-        use core_foundation::string::{CFString, CFStringRef};
-
-        extern "C" {
-            pub fn _CFCopySystemVersionDictionary() -> CFDictionaryRef;
-            static _kCFSystemVersionProductVersionKey: CFStringRef;
-        }
-
-        unsafe {
-            let dict = _CFCopySystemVersionDictionary();
-            if !dict.is_null() {
-                let dict = CFDictionary::wrap_under_create_rule(dict);
-                let version = dict.find(CFTypeRef::from(_kCFSystemVersionProductVersionKey as _));
-
-                if let Some(version) = version {
-                    let version = CFString::wrap_under_get_rule(version as _).to_string();
-
-                    let name = if version.starts_with("10.16") || version.starts_with("11.") {
-                        "Big Sur "
-                    } else if version.starts_with("10.15") {
-                        "Catalina "
-                    } else if version.starts_with("10.14") {
-                        "Mojave "
-                    } else if version.starts_with("10.13") {
-                        "High Sierra "
-                    } else if version.starts_with("10.12") {
-                        "Sierra "
-                    } else {
-                        ""
-                    };
-                    return format!("{}{}", name, version);
-                }
-            }
-
-            return "<Unknown>".to_string();
-        }
     }
 
     pub fn get_model() -> String {

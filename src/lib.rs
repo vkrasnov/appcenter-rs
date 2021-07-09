@@ -29,7 +29,7 @@ impl AppCenter {
     ///
     /// Install an optonal callback to be executed just before the report is sent
     /// usually this is the place to add any atachements to the report using
-    /// `add_binary_attachement` or `add_text_attachement`
+    /// `add_binary_attachment` or `add_text_attachment`
     ///
     pub fn set_report_callback<T>(&self, callback: T)
     where
@@ -187,13 +187,13 @@ impl AppCenterException {
 }
 
 impl<'a> AppCenterLogs<'a> {
-    fn add_attachement_inner(
+    fn add_attachment_inner(
         &mut self,
         data: Vec<u8>,
         file_name: Option<&'a str>,
         content_type: &'static str,
     ) {
-        // First attachement is always the ManagedError kind
+        // First attachment is always the ManagedError kind
         let (device, error_id) = match &self.logs[0] {
             AppCenterLog::ManagedError { device, id, .. } => (device.clone(), id.clone()),
             _ => unreachable!(),
@@ -209,12 +209,12 @@ impl<'a> AppCenterLogs<'a> {
         });
     }
 
-    pub fn add_binary_attachement(&mut self, data: Vec<u8>, file_name: Option<&'a str>) {
-        self.add_attachement_inner(data, file_name, "application/octet_stream");
+    pub fn add_binary_attachment(&mut self, data: Vec<u8>, file_name: Option<&'a str>) {
+        self.add_attachment_inner(data, file_name, "application/octet_stream");
     }
 
-    pub fn add_text_attachement(&'a mut self, data: &str, file_name: Option<&'a str>) {
-        self.add_attachement_inner(data.as_bytes().to_vec(), file_name, "text/plain");
+    pub fn add_text_attachment(&'a mut self, data: &str, file_name: Option<&'a str>) {
+        self.add_attachment_inner(data.as_bytes().to_vec(), file_name, "text/plain");
     }
 }
 
